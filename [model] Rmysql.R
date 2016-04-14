@@ -9,15 +9,13 @@ con = dbConnect(MySQL(),
 #한글 인코딩
 dbSendQuery(con, 'set names utf8')
 
-#가입한 모든 유저 불러오기 (핸드폰 미인증 유저 제외)
-rs = dbSendQuery(con, 'select * from bepro_api.user;')
-data = fetch(rs, n = -1)
-
-valid_user = data[!is.na(data$phone_verified_time),]
 
 #가입한 모든 유저 불러오기 (핸드폰 미인증 유저 포함)
 query_user = dbSendQuery(con, 'select * from bepro_api.user;')
 user_data = fetch(query_user, n = -1)
+
+#가입한 모든 유저 불러오기 (핸드폰 미인증 유저 제외)
+valid_user = user_data[!is.na(user_data$phone_verified_time),]
 
 #Match 데이터 불러오기
 query_match = dbSendQuery(con, 'select * from bepro_api.match;')
@@ -46,3 +44,7 @@ season_team_data = fetch(query_season_team, n = -1)
 #Season 데이터 불러오기
 query_season = dbSendQuery(con, 'select * from bepro_api.season;')
 season_data = fetch(query_season, n = -1)
+
+#Video 데이터 불러오기
+query_video = dbSendQuery(con, 'select * from bepro_api.media_video;')
+video_data = fetch(query_video, n = -1)

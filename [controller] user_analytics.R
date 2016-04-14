@@ -13,18 +13,19 @@ month_active_user = all_month_event_table[, c('user_id', 'date')]
 month_active_user = month_active_user[!duplicated(month_active_user), ]
 month_active_user = month_active_user[order(month_active_user$date),]
 
-this_week_date = c(20160328:20160331, 20160401:20160403)
+this_week_date = c(20160403:20160410)
 
 MAU = nrow(as.data.frame(table(month_active_user$user_id))) / nrow(valid_user)
 WAU = nrow((table(month_active_user[month_active_user$date %in% this_week_date,]))) / nrow(valid_user)
 Avg.DAU = mean(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
-min.DAU = min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
-max.DAU = max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
+min.DAU = min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
+max.DAU = max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
 MAU
 WAU
 Avg.DAU
 min.DAU
 max.DAU
+
 
 #DAU 변화 그래프 그리기
 monthly_user = as.data.frame(table(month_active_user$date))
@@ -56,7 +57,7 @@ count_signup = as.data.frame(table(user_signup_day$created_day))
 names(count_signup) = c('date', 'num')
 
 # 월별 신규 가입자 그래프 그리기
-this_month_date = c(20160304:20160331, 20160401:20160403)
+this_month_date = c(20160311:20160331, 20160401:20160410)
 count_signup_this_month = count_signup[count_signup$date %in% this_month_date, ]
 ggplot(data=count_signup_this_month, aes(x=date, y=num, group=1)) +
   geom_line() +

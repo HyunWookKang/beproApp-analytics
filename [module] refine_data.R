@@ -39,6 +39,12 @@ team_league = function(team_id) {
   league_name
 }
 
+# readable_video_id
+readable_video_id = function(video_id) {
+  video_name = video_data[video_data$id==video_id, 'title']
+  video_name
+}
+
 
 #Query table 만들기 (parameter = date)
 #connect_query_table(date)
@@ -56,9 +62,9 @@ project = 'bepro11-api'
 sql = 'select metadata.timestamp,
 structPayload.eventData.ngClick,
 structPayload.eventData.url,
+structPayload.eventData.href,
 structPayload.eventData.type,
-structPayload.userId,
-httpRequest.userAgent
+structPayload.userId
 from '
 
 #dbClearResult(dbListResults(con)[[1]])

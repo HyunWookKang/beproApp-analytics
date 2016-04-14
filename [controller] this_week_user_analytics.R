@@ -26,10 +26,11 @@ tw_not_retention = subset(tw_userid_list, dup==FALSE)
 merge_day_retention = merge(x = tw_not_retention, y = user_signup_day, by = 'user_id')
 merge_day_retention = merge_day_retention[order(merge_day_retention$created_day),]
 
-nrow(tw_userid_list)
-tw_new_user = merge_day_retention[merge_day_retention$created_day %in% c('03-28', '03-29', '03-30', '03-31', '04-01', '04-02', '04-03'),]
+tw_new_user = merge_day_retention[merge_day_retention$created_day %in% c(20160404:20160410),]
 tw_new_user_rate = round((nrow(tw_new_user) / nrow(tw_userid_list)) * 100, 2)
 tw_retention_rate = round(nrow(tw_retention) / nrow(tw_userid_list) * 100, 2)
 tw_return_rate = round((nrow(tw_not_retention)-nrow(tw_new_user)) / nrow(tw_userid_list) *100, 2)
 
-sapply(tw_new_user[tw_new_user$created_day=='03-29', 'user_id'], function(x) player_team(x))
+tw_new_user_rate
+tw_retention_rate
+tw_return_rate
