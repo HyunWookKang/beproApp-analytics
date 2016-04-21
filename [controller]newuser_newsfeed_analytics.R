@@ -13,16 +13,9 @@ rownames(temp_tw_event_table) = 1:nrow(temp_tw_event_table)
 # Get row indexes of "views at newsfeed page" and 10 followed actions
 feed_row = strtoi(rownames(temp_tw_event_table[(temp_tw_event_table$page_url == '/feeds' 
                                                 & temp_tw_event_table$event_type=='view'), ]))
-feed_row1 = feed_row+1
-feed_row2 = feed_row+2
-feed_row3 = feed_row+3
-feed_row4 = feed_row+4
-feed_row5 = feed_row+5
-feed_row6 = feed_row+6
-feed_row7 = feed_row+7
-feed_row8 = feed_row+8
-feed_row9 = feed_row+9
-feed_row10 = feed_row+10
+for(i in 1:10){
+  assign(paste("feed_row", i, sep=""), feed_row+i)
+}
 feed_row_combine = c(feed_row, feed_row1, feed_row2, feed_row3, feed_row4, feed_row5,
                      feed_row6, feed_row7, feed_row8, feed_row9, feed_row10)
 

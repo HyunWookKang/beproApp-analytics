@@ -3,7 +3,9 @@ options(digits.secs=3)
 
 # Copy the original data, Change the time column from String to POSIX
 temp_tw_event_table = tw_event_table
+temp_user_data = user_data
 temp_tw_event_table$time = as.POSIXct(temp_tw_event_table$time, tz='GMT')
+temp_user_data$created = as.POSIXct(temp_user_data$created, tz='GMT')
 temp_tw_event_table = temp_tw_event_table[order(temp_tw_event_table$user_id, temp_tw_event_table$time), ]
 rownames(temp_tw_event_table) = 1:nrow(temp_tw_event_table)
 
@@ -17,12 +19,22 @@ for(i in 1:10){
 feed_row_combine = c(feed_row, feed_row1, feed_row2, feed_row3, feed_row4, feed_row5,
                      feed_row6, feed_row7, feed_row8, feed_row9, feed_row10)
 
+
 # Include only 10 actions after "View at Newsfeed page" into feed_data
 feed_data = temp_tw_event_table[feed_row_combine, ]
 feed_data = feed_data[!duplicated(feed_data), ]
 feed_data = feed_data[order(feed_data$user_id, feed_data$time), ]
+feed_data = feed_data[!is.na(feed_data$user_id),] # exclude when user_id is NA
 
 
+# Include actions at least 7 day after "creating userID"
+colnames(temp_user_data)[1] = 'user_id'
+feed_data = merge(feed_data, temp_user_data[,c('user_id','created')], by='user_id')
+feed_data = feed_data[,c(2,3,4,5,6,7,1,8)]
+feed_data = cbind(feed_data, difftime(feed_data$time, feed_data$created, units="secs"))
+colnames(feed_data)[9] = 'time_diff'
+feed_data = feed_data[(feed_data$time_diff > 3600*24*7), ]
+feed_data = feed_data[,1:7]
 
 # Include actions which changed the page by click
 # (except same action by same person in a short period)
@@ -76,13 +88,14 @@ for(i in 1:(nrow(feed_data_compare)-1)){
   }
 }
 
+
 # Get each actions
 is_default = grepl("default", feed_filtered_data$href) |
-            (grepl("openModal", feed_filtered_data$ngClick) &
-             (grepl("label-create", feed_filtered_data$class_name) |
-              grepl("important-outline", feed_filtered_data$class_name) |
-              grepl("", feed_filtered_data$class_name)))
-                
+  (grepl("openModal", feed_filtered_data$ngClick) &
+     (grepl("label-create", feed_filtered_data$class_name) |
+        grepl("important-outline", feed_filtered_data$class_name) |
+        grepl("", feed_filtered_data$class_name)))
+
 is_highlight = grepl("highlight", feed_filtered_data$href)
 is_lineup = grepl("lineup", feed_filtered_data$href)
 is_media = grepl("media", feed_filtered_data$href)
@@ -90,20 +103,20 @@ is_feedleague = grepl("/leagues", feed_filtered_data$href) & !grepl("close", fee
 is_feedteam = grepl("/teams", feed_filtered_data$href) & !grepl("close", feed_filtered_data$ngClick)
 is_feeduser = grepl("/users", feed_filtered_data$href) & !grepl("close", feed_filtered_data$ngClick)
 is_newsfeed = is_default | is_highlight | is_lineup | is_media | 
-              is_feedleague | is_feedteam | is_feeduser 
+  is_feedleague | is_feedteam | is_feeduser 
 
 
 is_leftmenu = grepl("closeLeftSideMenu()", feed_filtered_data$ngClick) |
-              (grepl("openModal", feed_filtered_data$ngClick) & 
-               (grepl("bepro.activated", feed_filtered_data$class_name) |
-                grepl("label-btn", feed_filtered_data$class_name)))
+  (grepl("openModal", feed_filtered_data$ngClick) & 
+     (grepl("bepro.activated", feed_filtered_data$class_name) |
+        grepl("label-btn", feed_filtered_data$class_name)))
 is_rightmenu = grepl("closeRightSideMenu()", feed_filtered_data$ngClick)
-  
+
 is_remove = grepl("remove", feed_filtered_data$ngClick)
 is_belowTap = grepl("root.", feed_filtered_data$ngClick)                
 is_search = grepl("/search", feed_filtered_data$href) &
-            !grepl("default", feed_filtered_data$href) &
-            grepl("search-strong", feed_filtered_data$class_name)
+  !grepl("default", feed_filtered_data$href) &
+  grepl("search-strong", feed_filtered_data$class_name)
 is_others = is_remove | is_belowTap | is_search            
 
 feed_default_click = feed_filtered_data[is_default, ]
