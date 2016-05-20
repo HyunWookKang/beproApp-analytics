@@ -33,7 +33,8 @@ all_month_full_sql = paste(month_sql, connect_query_table(all_month_date))
 all_month_rawtable = query_exec(all_month_full_sql, project, max_pages = Inf)
 names(all_month_rawtable) = c('time', 'user_id')
 
-all_month_event_table = all_month_rawtable[order(all_month_rawtable$user_id, all_month_rawtable$time, decreasing = TRUE),]
+all_month_event_table = all_month_rawtable %>%
+  arrange(user_id, desc(time))
 
 # 세션 카운트 / 세션 시작 시간 설정
 

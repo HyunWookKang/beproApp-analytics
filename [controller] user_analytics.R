@@ -2,38 +2,32 @@ library('dplyr')
 library('ggplot2')
 
 # MAU / WAU / DAU 계산
-extract_date_from_rawtable = function(x) {
-  y = strsplit(as.character(x), ' ')[[1]]
-  z = strsplit(as.character(y), '-')[[1]]
-  paste0(z[1], z[2], z[3])
-}
 
-all_month_event_table$date = sapply(all_month_event_table$time, function(x) extract_date_from_rawtable(x))
-head(all_month_event_table)
+all_month_event_table$date = gsub('-', '', as.Date(all_month_event_table$time))
 
 month_active_user = all_month_event_table[, c('user_id', 'date')]
 month_active_user = month_active_user[!duplicated(month_active_user), ]
-month_active_user = month_active_user[order(month_active_user$date),]
+month_active_user = arrange(month_active_user, desc(date))
 
 this_week_date = tw_date
 
-MAU = nrow(as.data.frame(table(month_active_user$user_id))) / nrow(valid_user)
-WAU = nrow((table(month_active_user[month_active_user$date %in% this_week_date,]))) / nrow(valid_user)
-Avg.DAU = mean(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
-min.DAU = min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
-max.DAU = max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
-MAU
-nrow(as.data.frame(table(month_active_user$user_id)))
-WAU
-nrow((table(month_active_user[month_active_user$date %in% this_week_date,])))
-Avg.DAU
-mean(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
-min.DAU
-min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
-max.DAU
-max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
-nrow(valid_user)
+month_active_user %>%
+  summarise(MAU = n_distinct(user_id), MAU_ratio = n_distinct(user_id) / nrow(valid_user)) 
 
+month_active_user %>%
+  filter(date %in% this_week_date) %>%
+  summarise(WAU = n_distinct(user_id), WAU_ration = n_distinct(user_id) / nrow(valid_user),
+            Avg.DAU = mean())
+
+month_active_user %>%
+  filter(date %in% this_week_date) %>%
+  group_by(date) %>%
+  summarise(n = n()) %>%
+  summarise(Avg.DAU = mean(n), Avg.ratio = mean(n)/nrow(valid_user),
+            min.DAU = min(n), min.ratio = min(n)/nrow(valid_user), 
+            max.DAU =max(n), max.ratio = max(n)/nrow(valid_user),
+            user = nrow(valid_user))
+  
 #DAU 변화 그래프 그리기
 monthly_user = as.data.frame(table(month_active_user$date))
 names(monthly_user) = c('date', 'num')
@@ -49,17 +43,14 @@ ggplot(data=monthly_user, aes(x=date, y=num, group=1)) +
         axis.text.x = element_text(angle=90))
 
 #가입 날짜만 잘라내기
-extract_date_from_created = function(x) {
-  y = strsplit(as.character(x), ' ')[[1]][1]
-  z = strsplit(as.character(y), '-')[[1]]
-  paste0(z[1], z[2], z[3])
-}
-user_data$created_day = sapply(user_data$created, function(x) extract_date_from_created(x))
+user_data$created_day = gsub('-', '', as.Date(user_data$created))
 
 #가입날짜별로 카운트
-user_signup_day = user_data[, c('id','created_day')]
-names(user_signup_day) = c('user_id', 'created_day')
-count_signup = as.data.frame(table(user_signup_day$created_day))
+count_signup = user_data %>%
+  select(id, created_day) %>%
+  group_by(created_day) %>%
+  summarise(n = n())
+count_signup = as.data.frame(count_signup)
 names(count_signup) = c('date', 'num')
 
 # 월별 신규 가입자 그래프 그리기
