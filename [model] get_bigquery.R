@@ -37,56 +37,22 @@ all_month_event_table = all_month_rawtable[order(all_month_rawtable$user_id, all
 
 # 세션 카운트 / 세션 시작 시간 설정
 
-set_session_info = function(df) {
-  for (i in 1:nrow(df)) {
-    j = i+1
-    if (j < nrow(df)) {
-      if (as.numeric(difftime(df[,'time'][i], df[,'time'][j]), units='secs') >= 1800) {
-        if (match(TRUE, is.na(df[,'session'])) == 1) {
-          df[,'session'][match(TRUE, is.na(df[,'session'])):i] = 1
-          df[,'session_time'][match(TRUE, is.na(df[,'session_time'])):i] = df[i,'time']
-        } else {
-          k = df[,'session'][match(TRUE, is.na(df[,'session']))-1] + 1
-          df[,'session'][match(TRUE, is.na(df[,'session'])):i] = k
-          df[,'session_time'][match(TRUE, is.na(df[,'session_time'])):i] = df[j,'time']
-        }
-      }
-    } else if (j == nrow(df)) {
-      if (match(TRUE, is.na(df[,'session'])) == 1) {
-        df[, 'session'][match(TRUE, is.na(df['session'])):j] = 1
-        df[,'session_time'][match(TRUE, is.na(df[,'session_time'])):j] = df[j,'time']
-      } else {
-        k = df[,'session'][match(TRUE, is.na(df[,'session']))-1] + 1
-        df[,'session'][match(TRUE, is.na(df[,'session'])):j] = k
-        df[,'session_time'][match(TRUE, is.na(df[,'session_time'])):j] = df[j,'time']
-      }
-    } else if (nrow(df) == 1) {
-      df[, 'session'][match(TRUE, is.na(df['session']))] = 1
-      df[,'session_time'][match(TRUE, is.na(df[,'session_time']))] = df[1,'time']
-    }
-  }
-  return(df)
-}
+session_table = filter(tw_event_table, !is.na(user_id))
+session_table$time = as.POSIXct(strptime(session_table$time, '%Y-%m-%d %H:%M:%S'))
 
-completeFun = function(data, desiredCols) {
-  completeVec = complete.cases(data[, desiredCols])
-  return(data[completeVec, ])
-}
+session_data = session_table %>%
+  group_by(user_id) %>%
+  mutate(compare_time = as.numeric(lag(time) - time))
 
-session_table = tw_event_table
+session_data$compare_time[is.na(session_data$compare_time)] = 0
 
-refined_table = completeFun(session_table, 'user_id')
-refined_table$session = rep(NA, nrow(refined_table))
-refined_table$session_time = rep(NA, nrow(refined_table))
+session_data = session_data %>%
+  group_by(user_id) %>%
+  mutate(session = cumsum(compare_time >= 1800) +1L)
 
-system.time(
-  for (i in unique(refined_table$user_id)[!is.na(unique(refined_table$user_id))]) {
-    newdf = set_session_info(filter(refined_table, user_id == as.integer(i)))
-    refined_table[refined_table$user_id==as.integer(i), 'session'] = newdf[newdf$user_id==as.integer(i), 'session']
-    refined_table[refined_table$user_id==as.integer(i), 'session_time'] = newdf[newdf$user_id==as.integer(i), 'session_time']
-  }
-)
-#select(filter(test3, user_id == as.integer(9985)), session) = 1
+session_data = session_data %>%
+  group_by(user_id, session) %>%
+  mutate(session_time = time[1])
 
 # 전체 영상 데이터 불러오기
 total_date = c(20160315:20160331, 20160401:20160430, 20160501:20160515)
