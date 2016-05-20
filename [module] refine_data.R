@@ -1,3 +1,5 @@
+source('[model] Rmysql.R')
+
 #user_id 실명 변경 함수 (parameter = user_id Column Ex. ga.screen$dimension1)
 #readable_user_id(data, col)
 readable_user_id = function(user_id) {
@@ -25,15 +27,25 @@ readable_league_id = function(league_id) {
 }
 
 #선수 소속팀
-player_team = function(user_id) {
-  team_pk = player_data[player_data$user_id==user_id, 'team_id']
+player_team = function(userId) {
+  search_team_id = subset(player_data, select=team_id, subset=(user_id==userId))$team_id
+  team_pk = search_team_id[!is.na(search_team_id)]
   team_name = sapply(team_pk, function (x) team_data[team_data$id == x , 'name'])
   team_name
 }
-
 # 팀 소속 리그
 team_league = function(team_id) {
   season_id = season_team_data[season_team_data$team_id==team_id, 'season_id']
+  league_id = sapply(season_id, function (x) season_data[season_data$id == x , 'league_id'])
+  league_name = sapply(league_id, function(x) league_data[league_data$id == x, 'name'])
+  league_name
+}
+
+# 선수 소속 리그
+player_league = function(userId) {
+  search_team_id = subset(player_data, select=team_id, subset=(user_id==userId))$team_id
+  team_pk = search_team_id[!is.na(search_team_id)]
+  season_id = season_team_data[season_team_data$team_id==team_pk, 'season_id']
   league_id = sapply(season_id, function (x) season_data[season_data$id == x , 'league_id'])
   league_name = sapply(league_id, function(x) league_data[league_data$id == x, 'name'])
   league_name
@@ -59,7 +71,7 @@ connect_query_table = function(date) {
 
 #초기 Query문 만들기
 project = 'bepro11-api'
-sql = 'select metadata.timestamp,
+sql = 'select structPayload.eventData.utcTime,
 structPayload.eventData.ngClick,
 structPayload.eventData.url,
 structPayload.eventData.href,

@@ -9,11 +9,13 @@ extract_date_from_rawtable = function(x) {
 }
 
 all_month_event_table$date = sapply(all_month_event_table$time, function(x) extract_date_from_rawtable(x))
+head(all_month_event_table)
+
 month_active_user = all_month_event_table[, c('user_id', 'date')]
 month_active_user = month_active_user[!duplicated(month_active_user), ]
 month_active_user = month_active_user[order(month_active_user$date),]
 
-this_week_date = c(20160403:20160410)
+this_week_date = tw_date
 
 MAU = nrow(as.data.frame(table(month_active_user$user_id))) / nrow(valid_user)
 WAU = nrow((table(month_active_user[month_active_user$date %in% this_week_date,]))) / nrow(valid_user)
@@ -21,11 +23,16 @@ Avg.DAU = mean(as.data.frame(table(month_active_user[month_active_user$date %in%
 min.DAU = min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
 max.DAU = max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq) / nrow(valid_user)
 MAU
+nrow(as.data.frame(table(month_active_user$user_id)))
 WAU
+nrow((table(month_active_user[month_active_user$date %in% this_week_date,])))
 Avg.DAU
+mean(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
 min.DAU
+min(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
 max.DAU
-
+max(as.data.frame(table(month_active_user[month_active_user$date %in% this_week_date,]$date))$Freq)
+nrow(valid_user)
 
 #DAU 변화 그래프 그리기
 monthly_user = as.data.frame(table(month_active_user$date))
@@ -40,7 +47,6 @@ ggplot(data=monthly_user, aes(x=date, y=num, group=1)) +
             vjust=-1) +
   theme(text = element_text(size=20),
         axis.text.x = element_text(angle=90))
-
 
 #가입 날짜만 잘라내기
 extract_date_from_created = function(x) {
@@ -57,7 +63,7 @@ count_signup = as.data.frame(table(user_signup_day$created_day))
 names(count_signup) = c('date', 'num')
 
 # 월별 신규 가입자 그래프 그리기
-this_month_date = c(20160311:20160331, 20160401:20160410)
+this_month_date = all_month_date
 count_signup_this_month = count_signup[count_signup$date %in% this_month_date, ]
 ggplot(data=count_signup_this_month, aes(x=date, y=num, group=1)) +
   geom_line() +
@@ -89,3 +95,19 @@ ggplot(data=consolidate_table, aes(x=date, y=rate, group=1)) +
   theme(text = element_text(size=20),
         axis.text.x = element_text(angle=90))
 
+# 세션 평균 지속 시간
+test = refined_table
+head(refined_table)
+test$time = as.POSIXct(strptime(test$time, '%Y-%m-%d %H:%M:%S'))
+
+avg_duration = vector(mode = 'numeric', length = 0)
+
+avg_duration
+
+test2 = test %>%
+  group_by(user_id, session) %>%
+  summarise(min_value = min(time), max_value = max(time))
+test2 = as.data.frame(test2)
+test2[1:30,]
+test[test$user_id == 10044, c('time', 'session', 'session_time')]
+test[test$user_id == 1005, c('time', 'session', 'session_time')]

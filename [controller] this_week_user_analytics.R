@@ -12,6 +12,7 @@ week_userid_list[order(week_userid_list$user_id), ]
 
 dupRows = dupsBetweenGroups(week_userid_list, 'week')
 week_userid_list = cbind(week_userid_list, dup = dupRows)
+week_userid_list[order(week_userid_list$user_id), ]
 
 tw_userid_list = subset(week_userid_list, week=='tw', select = -week)
 lw_userid_list = subset(week_userid_list, week=='lw', select = -week)
@@ -26,7 +27,7 @@ tw_not_retention = subset(tw_userid_list, dup==FALSE)
 merge_day_retention = merge(x = tw_not_retention, y = user_signup_day, by = 'user_id')
 merge_day_retention = merge_day_retention[order(merge_day_retention$created_day),]
 
-tw_new_user = merge_day_retention[merge_day_retention$created_day %in% c(20160404:20160410),]
+tw_new_user = merge_day_retention[merge_day_retention$created_day %in% tw_date,]
 tw_new_user_rate = round((nrow(tw_new_user) / nrow(tw_userid_list)) * 100, 2)
 tw_retention_rate = round(nrow(tw_retention) / nrow(tw_userid_list) * 100, 2)
 tw_return_rate = round((nrow(tw_not_retention)-nrow(tw_new_user)) / nrow(tw_userid_list) *100, 2)
