@@ -48,9 +48,8 @@ player_league = function(userId) {
   season_id = season_team_data[season_team_data$team_id==team_pk, 'season_id']
   league_id = sapply(season_id, function (x) season_data[season_data$id == x , 'league_id'])
   league_name = sapply(league_id, function(x) league_data[league_data$id == x, 'name'])
-  league_name
+  as.vector(league_name)
 }
-
 # readable_video_id
 readable_video_id = function(video_id) {
   video_name = video_data[video_data$id==video_id, 'title']
@@ -100,7 +99,7 @@ dupsBetweenGroups <- function (df, idcol) {
   
   # Get the data columns to use for finding matches
   datacols <- setdiff(names(df), idcol)
-  
+
   # Sort by idcol, then datacols. Save order so we can undo the sorting later.
   sortorder <- do.call(order, df)
   df <- df[sortorder,]

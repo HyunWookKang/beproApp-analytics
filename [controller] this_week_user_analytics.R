@@ -24,7 +24,7 @@ round(nrow(lw_userid_list[lw_userid_list$dup==TRUE,]) / nrow(lw_userid_list)* 10
 tw_retention = subset(tw_userid_list, dup==TRUE)
 tw_not_retention = subset(tw_userid_list, dup==FALSE)
 
-merge_day_retention = merge(x = tw_not_retention, y = user_signup_day, by = 'user_id')
+merge_day_retention = merge(x = tw_not_retention, y = valid_user, by.x = 'user_id', by.y = 'id')
 merge_day_retention = merge_day_retention[order(merge_day_retention$created_day),]
 
 tw_new_user = merge_day_retention[merge_day_retention$created_day %in% tw_date,]
@@ -35,3 +35,4 @@ tw_return_rate = round((nrow(tw_not_retention)-nrow(tw_new_user)) / nrow(tw_user
 tw_new_user_rate
 tw_retention_rate
 tw_return_rate
+

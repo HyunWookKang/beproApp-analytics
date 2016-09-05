@@ -1,4 +1,3 @@
-
 tw_click_event = tw_event_table[tw_event_table$event_type == 'click',]
 tw_count_click_event = as.data.frame(table(tw_click_event$ngClick))
 names(tw_count_click_event) = c('event', 'freq')

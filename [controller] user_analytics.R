@@ -2,7 +2,6 @@ library('dplyr')
 library('ggplot2')
 
 # MAU / WAU / DAU 계산
-
 all_month_event_table$date = gsub('-', '', as.Date(all_month_event_table$time))
 
 month_active_user = all_month_event_table[, c('user_id', 'date')]
@@ -16,8 +15,7 @@ month_active_user %>%
 
 month_active_user %>%
   filter(date %in% this_week_date) %>%
-  summarise(WAU = n_distinct(user_id), WAU_ration = n_distinct(user_id) / nrow(valid_user),
-            Avg.DAU = mean())
+  summarise(WAU = n_distinct(user_id), WAU_ration = n_distinct(user_id) / nrow(valid_user))
 
 month_active_user %>%
   filter(date %in% this_week_date) %>%
@@ -43,10 +41,10 @@ ggplot(data=monthly_user, aes(x=date, y=num, group=1)) +
         axis.text.x = element_text(angle=90))
 
 #가입 날짜만 잘라내기
-user_data$created_day = gsub('-', '', as.Date(user_data$created))
+valid_user$created_day = gsub('-', '', as.Date(valid_user$phone_verified_time))
 
 #가입날짜별로 카운트
-count_signup = user_data %>%
+count_signup = valid_user %>%
   select(id, created_day) %>%
   group_by(created_day) %>%
   summarise(n = n())
@@ -86,19 +84,33 @@ ggplot(data=consolidate_table, aes(x=date, y=rate, group=1)) +
   theme(text = element_text(size=20),
         axis.text.x = element_text(angle=90))
 
-# 세션 평균 지속 시간
-test = refined_table
-head(refined_table)
-test$time = as.POSIXct(strptime(test$time, '%Y-%m-%d %H:%M:%S'))
+#누적 가입자 그래프
+cum_signup = count_signup %>%
+  mutate(cum = cumsum(num))
 
-avg_duration = vector(mode = 'numeric', length = 0)
+ggplot(data = cum_signup, aes(x = date, y = cum, group = 1)) +
+  geom_line() +
+  geom_point() +
+  geom_text(aes(label = cum_signup$cum, size = 12),
+            check_overlap = TRUE,
+            position = position_dodge(width = 0.9),
+            size = 6,
+            vjust = -1) +
+  theme(text = element_text(size = 15),
+        axis.text.x = element_text(angle=90))
 
-avg_duration
-
-test2 = test %>%
+# 세션 평균 지속 시간 & 평균 세션 수
+test = session_data
+duration_table = test %>%
   group_by(user_id, session) %>%
-  summarise(min_value = min(time), max_value = max(time))
-test2 = as.data.frame(test2)
-test2[1:30,]
-test[test$user_id == 10044, c('time', 'session', 'session_time')]
-test[test$user_id == 1005, c('time', 'session', 'session_time')]
+  summarise(duration = as.numeric(first(time)-last(time)))
+duration_table = as.data.frame(duration_table)
+
+duration_table %>%
+  filter(duration != 0) %>%
+  summarise(avg_duration = mean(duration))
+
+duration_table %>%
+  filter(user_id != 1) %>%
+  summarise(avg_session = mean(session))
+
